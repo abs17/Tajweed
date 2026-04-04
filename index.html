@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindmap • Waqf & Ibtidâ' en récitation coranique (mise à jour PDF)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-deep: #070d1a;
+            --bg-mid: #0c1527;
+            --bg-card: #111d35;
+            --gold: #d4a853;
+            --gold-light: #f0d68a;
+            --gold-dim: #8b7332;
+            --emerald: #34d399;
+            --emerald-deep: #065f46;
+            --sapphire: #3b82f6;
+            --sapphire-deep: #1e3a8a;
+            --ruby: #f43f5e;
+            --amethyst: #a78bfa;
+            --amber: #f59e0b;
+            --text-primary: #e8e0d4;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --font-arabic: 'Amiri', serif;
+            --font-heading: 'Cormorant Garamond', serif;
+            --font-body: 'Outfit', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(52, 211, 153, 0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(212, 168, 83, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .geo-pattern {
+            position: fixed;
+            inset: 0;
+            opacity: 0.025;
+            background-image:
+                repeating-linear-gradient(0deg, var(--gold) 0px, transparent 1px, transparent 60px),
+                repeating-linear-gradient(60deg, var(--gold) 0px, transparent 1px, transparent 60px),
+                repeating-linear-gradient(120deg, var(--gold) 0px, transparent 1px, transparent 60px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app { position: relative; z-index: 1; }
+
+        header { text-align: center; padding: 3rem 1.5rem 2rem; position: relative; }
+        .header-ornament { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1rem; }
+        .ornament-line { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+        .ornament-diamond { width: 8px; height: 8px; background: var(--gold); transform: rotate(45deg); }
+
+        header h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            color: var(--gold-light);
+            letter-spacing: 0.02em;
+            line-height: 1.3;
+        }
+
+        header .subtitle {
+            font-family: var(--font-arabic);
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-top: 0.5rem;
+            direction: rtl;
+        }
+
+        header .description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 0.75rem;
+            font-weight: 300;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0 1.5rem 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background: var(--bg-card);
+            border: 1px solid rgba(212, 168, 83, 0.2);
+            color: var(--gold-light);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .toolbar button:hover {
+            background: rgba(212, 168, 83, 0.15);
+            border-color: var(--gold);
+            transform: translateY(-1px);
+        }
+
+        .mindmap-wrapper { padding: 1rem; overflow: auto; position: relative; }
+        .mindmap-canvas { position: relative; width: 100%; min-height: 80vh; }
+
+        .connectors-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .node-container {
+            position: absolute;
+            z-index: 10;
+            cursor: pointer;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+
+        .node-container:hover { transform: scale(1.06) !important; }
+        .node-container.collapsed { opacity: 0; pointer-events: none; transform: scale(0.7) !important; }
+
+        .node {
+            border-radius: 14px;
+            padding: 0.75rem 1.1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .node::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .node .label-fr { font-family: var(--font-body); font-weight: 500; font-size: 0.82rem; line-height: 1.35; }
+        .node .label-ar { font-family: var(--font-arabic); font-size: 1rem; direction: rtl; margin-top: 2px; opacity: 0.85; }
+
+        .central .node {
+            background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%);
+            border: 2px solid rgba(52, 211, 153, 0.4);
+            box-shadow: 0 0 60px rgba(52, 211, 153, 0.25), 0 8px 32px rgba(0,0,0,0.5);
+            padding: 1.2rem 1.6rem;
+            border-radius: 20px;
+        }
+
+        .central .node .label-fr { font-size: 1.05rem; font-weight: 600; }
+        .central .node .label-ar { font-size: 1.35rem; }
+        .central .node .quran-icon { font-size: 2rem; margin-bottom: 0.3rem; display: block; }
+
+        .branch-1 .node { background: linear-gradient(135deg, #1e3a8a, #2563eb); border-color: rgba(59,130,246,0.3); }
+        .branch-2 .node { background: linear-gradient(135deg, #7c2d12, #ea580c); border-color: rgba(234,88,12,0.3); }
+        .branch-3 .node { background: linear-gradient(135deg, #5b21b6, #8b5cf6); border-color: rgba(139,92,246,0.3); }
+        .branch-4 .node { background: linear-gradient(135deg, #854d0e, #d97706); border-color: rgba(217,119,6,0.3); }
+        .branch-5 .node { background: linear-gradient(135deg, #9f1239, #e11d48); border-color: rgba(225,29,72,0.3); }
+
+        .leaf .node { opacity: 0.92; }
+        .leaf .node .label-fr { font-size: 0.78rem; font-weight: 400; }
+        .leaf .node .label-ar { font-size: 0.9rem; }
+
+        .tippy-box[data-theme~='waqf'] {
+            background: linear-gradient(135deg, #111d35 0%, #0f172a 100%);
+            border: 1px solid rgba(212, 168, 83, 0.3);
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            max-width: 380px;
+            padding: 0;
+        }
+
+        .tooltip-content { padding: 1rem 1.2rem; }
+        .tooltip-content .tt-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--gold-light); margin-bottom: 0.4rem; }
+        .tooltip-content .tt-rule { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 0.6rem; }
+        .tooltip-content .tt-example {
+            background: rgba(212, 168, 83, 0.08);
+            border-left: 3px solid var(--gold);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 0.5rem;
+        }
+        .tooltip-content .tt-example .verse {
+            font-family: var(--font-arabic);
+            font-size: 1.15rem;
+            color: var(--gold-light);
+            direction: rtl;
+            text-align: right;
+            line-height: 1.6;
+        }
+        .tooltip-content .tt-example .ref { font-size: 0.72rem; color: var(--gold-dim); margin-top: 2px; }
+        .tooltip-content .tt-explanation { font-size: 0.78rem; color: var(--emerald); font-style: italic; line-height: 1.5; padding-top: 0.3rem; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        .legend { display: flex; justify-content: center; gap: 1.5rem; padding: 1.5rem; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-secondary); }
+        .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+        .fullscreen-active { position: fixed; inset: 0; z-index: 9999; background: var(--bg-deep); overflow: auto; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .node-container { animation: fadeInUp 0.5s ease-out backwards; }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 30px rgba(52, 211, 153, 0.2), 0 8px 32px rgba(0,0,0,0.5); } 50% { box-shadow: 0 0 50px rgba(52, 211, 153, 0.35), 0 8px 32px rgba(0,0,0,0.5); } }
+        .central .node { animation: pulse-glow 3s ease-in-out infinite; }
+    </style>
+</head>
+<body>
+    <div class="geo-pattern"></div>
+    <div class="app">
+        <header>
+            <div class="header-ornament">
+                <span class="ornament-line"></span>
+                <span class="ornament-diamond"></span>
+                <span class="ornament-line"></span>
+            </div>
+            <h1><span class="icon">☽</span> Ontologie du Waqf & Ibtidâ' <span style="font-size:0.6em;opacity:0.7;">(exemples du PDF)</span></h1>
+            <p class="subtitle">ما لا يتمّ الوقف عليه في التلاوة القرآنية</p>
+            <p class="description">Tous les exemples coraniques ont été enrichis directement à partir du PDF « المتعلقات اللفظية » • Survolez les nœuds</p>
+        </header>
+
+        <div class="toolbar">
+            <button onclick="expandAll()">⊕ Tout déplier</button>
+            <button onclick="collapseAll()">⊖ Tout replier</button>
+            <button onclick="toggleFullscreen()">⛶ Plein écran</button>
+            <button onclick="exportPNG()">⤓ Exporter PNG</button>
+        </div>
+
+        <div class="mindmap-wrapper" id="mindmapWrapper">
+            <div class="mindmap-canvas" id="mindmapCanvas">
+                <svg class="connectors-svg" id="connectorsSvg"></svg>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background: #34d399;"></span> Nœud central</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span> Syntaxe (I'râb)</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #ea580c;"></span> Particules & Verbes</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #8b5cf6;"></span> Sémantique</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #d97706;"></span> Particules spéciales</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #e11d48;"></span> Autres interdictions</div>
+        </div>
+    </div>
+
+<script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/tippy.js@6.3.7/animations/shift-away.css">
+<script>
+// ═══════════════════════════════════════════
+// DATA: TREE mise à jour avec exemples EXACTS du PDF
+// ═══════════════════════════════════════════
+const TREE = {
+    id: 'root',
+    labelFr: 'Règles du Waqf incomplet',
+    labelAr: 'ما لا يتمّ الوقف عليه',
+    type: 'central',
+    tooltip: {
+        title: 'Le Waqf incomplet',
+        rule: 'Il s\'agit des cas où le lecteur ne peut pas s\'arrêter (waqf) sans que le sens soit altéré ou incomplet, car il existe une dépendance grammaticale ou sémantique forte entre les mots.',
+        verses: [{ verse: '﴿ وَلَا تَقْرَبُوا الصَّلَاةَ وَأَنتُمْ سُكَارَىٰ ﴾', ref: 'An-Nisâ\' 4:43' }],
+        explanation: 'Exemple tiré du PDF : s\'arrêter après « الصلاة » sans lire la suite change complètement le sens.'
+    },
+    children: [
+        {
+            id: 'b1',
+            labelFr: '1. Dépendances syntaxiques',
+            labelAr: 'التعلّقات الإعرابية',
+            type: 'branch',
+            branchIndex: 1,
+            tooltip: { title: 'Dépendances syntaxiques (I\'râb)', rule: 'Tout mot qui dépend grammaticalement d\'un autre (par annexion, qualification, ou régence casuelle) ne peut pas être séparé de lui par un arrêt.', verses: [], explanation: 'Directement du PDF (page 1).' },
+            children: [
+                {
+                    id: 'b1-1',
+                    labelFr: 'Annexion (iḍâfa)',
+                    labelAr: 'الإضافة',
+                    type: 'leaf',
+                    branchIndex: 1,
+                    tooltip: {
+                        title: 'Annexion – الإضافة',
+                        rule: 'Le muḍâf ne peut être séparé du muḍâf ilayh.',
+                        verses: [
+                            { verse: '﴿ صِبْغَةَ اللَّهِ ۖ وَمَنْ أَحْسَنُ مِنَ اللَّهِ صِبْغَةً ﴾', ref: 'Al-Baqara 2:138' },
+                            { verse: '﴿ وَكَانَتْ كَلِمَةُ رَبِّكَ الْحُسْنَى ﴾', ref: 'Al-A\'râf 7:137' },
+                            { verse: '﴿ إِنَّهُۥ كَانَ مُؤْحِدٌ الْيَتِينَ ﴾', ref: 'Al-Wâqi\'a 56:95' }
+                        ],
+                        explanation: 'PDF page 1-2 : arrêt sur le muḍâf seul est قبيح (inacceptable).'
+                    }
+                },
+                {
+                    id: 'b1-2',
+                    labelFr: 'Qualification (na\'t)',
+                    labelAr: 'النعت',
+                    type: 'leaf',
+                    branchIndex: 1,
+                    tooltip: {
+                        title: 'Qualification – النعت',
+                        rule: 'Le na\'t suit obligatoirement le man\'ût.',
+                        verses: [
+                            { verse: '﴿ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ﴾', ref: 'Al-Fâtiḥa 1:2' },
+                            { verse: '﴿ الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ ﴾', ref: 'Al-Baqara 2:3' }
+                        ],
+                        explanation: 'PDF page 2 : arrêt sur le man\'ût sans le na\'t rend le waqf غير تام.'
+                    }
+                },
+                {
+                    id: 'b1-3',
+                    labelFr: 'Régence casuelle',
+                    labelAr: 'العامل والمعمول',
+                    type: 'leaf',
+                    branchIndex: 1,
+                    tooltip: {
+                        title: 'Régence casuelle – الرافع / المرفوع',
+                        rule: 'Le râfi‘ ne peut être séparé du marfû‘ (et réciproquement).',
+                        verses: [
+                            { verse: '﴿ قَالَ اللَّهُ ﴾', ref: 'Al-Mâ\'ida 5:115' },
+                            { verse: '﴿ وَلَوْ أَبْتَغَىٰ إِبْرَاهِيمُ رَبَّهُ ﴾', ref: 'Al-Baqara 2:124' }
+                        ],
+                        explanation: 'PDF page 3 : exemples classiques du PDF.'
+                    }
+                },
+                {
+                    id: 'b1-4',
+                    labelFr: 'Apposition (badal)',
+                    labelAr: 'البدل',
+                    type: 'leaf',
+                    branchIndex: 1,
+                    tooltip: {
+                        title: 'Apposition – البدل',
+                        rule: 'Le badal suit le mubdal minhu et prend son cas.',
+                        verses: [{ verse: '﴿ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ۖ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ ﴾', ref: 'Al-Fâtiḥa 1:6-7' }],
+                        explanation: 'PDF page 2-3 : lien indissociable.'
+                    }
+                }
+            ]
+        },
+        {
+            id: 'b2',
+            labelFr: '2. Particules & verbes\nà complément obligatoire',
+            labelAr: 'الحروف والأفعال الناقصة',
+            type: 'branch',
+            branchIndex: 2,
+            tooltip: { title: 'Particules & verbes incomplets', rule: 'Certains mots exigent un complément pour que la phrase ait un sens.', verses: [], explanation: 'PDF page 1 & 5.' },
+            children: [
+                {
+                    id: 'b2-1',
+                    labelFr: 'إنّ et ses sœurs',
+                    labelAr: 'إنّ وأخواتها',
+                    type: 'leaf',
+                    branchIndex: 2,
+                    tooltip: {
+                        title: 'إنّ et ses sœurs',
+                        rule: 'Exigent ism + khabar.',
+                        verses: [{ verse: '﴿ إِنَّ إِبْرَاهِيمَ لَحَلِيمٌ أَوَّاهٌ مُنِيبٌ ﴾', ref: 'Hûd 11:75' }],
+                        explanation: 'PDF page 5 : arrêt sur إنّ ou sur l\'ism est قبيح.'
+                    }
+                },
+                {
+                    id: 'b2-2',
+                    labelFr: 'كان et ses sœurs',
+                    labelAr: 'كان وأخواتها',
+                    type: 'leaf',
+                    branchIndex: 2,
+                    tooltip: {
+                        title: 'كان et ses sœurs',
+                        rule: 'Exigent ism + khabar.',
+                        verses: [
+                            { verse: '﴿ وَكَانَ اللَّهُ عَفُورًا خَبِيرًا ﴾', ref: 'Al-Furqân 25:70' },
+                            { verse: '﴿ وَكَانَ أَمْرُ اللَّهِ قَدَرًا مَّقْدُورًا ﴾', ref: 'Al-Aḥzâb 33:38' }
+                        ],
+                        explanation: 'PDF page 5 : exemples directs du PDF.'
+                    }
+                },
+                {
+                    id: 'b2-3',
+                    labelFr: 'ظنّ et ses sœurs',
+                    labelAr: 'ظنّ وأخواتها',
+                    type: 'leaf',
+                    branchIndex: 2,
+                    tooltip: {
+                        title: 'ظنّ et ses sœurs',
+                        rule: 'Verbes de perception exigeant deux objets.',
+                        verses: [{ verse: '﴿ أَمْ حَسِبْتُمْ أَن تَدْخُلُوا الْجَنَّةَ ﴾', ref: 'Al-Baqara 2:214' }],
+                        explanation: 'PDF page 1 : règle mentionnée explicitement.'
+                    }
+                }
+            ]
+        },
+        {
+            id: 'b3',
+            labelFr: '3. Constructions\nsémantiques',
+            labelAr: 'البنى المعنوية',
+            type: 'branch',
+            branchIndex: 3,
+            tooltip: { title: 'Constructions sémantiques', rule: 'Liens de sens (exception, explication, coordination…).', verses: [], explanation: 'PDF page 1.' },
+            children: [
+                {
+                    id: 'b3-1',
+                    labelFr: 'Exception (istithnâ\')',
+                    labelAr: 'الاستثناء',
+                    type: 'leaf',
+                    branchIndex: 3,
+                    tooltip: {
+                        title: 'Exception – الاستثناء',
+                        rule: 'Mustathnâ lié au mustathnâ minhu.',
+                        verses: [{ verse: '﴿ فَشَرِبُوا مِنْهُ إِلَّا قَلِيلًا مِّنْهُمْ ﴾', ref: 'Al-Baqara 2:249' }],
+                        explanation: 'PDF page 1 : règle explicite.'
+                    }
+                },
+                {
+                    id: 'b3-2',
+                    labelFr: 'Explication (tafsîr)',
+                    labelAr: 'التفسير',
+                    type: 'leaf',
+                    branchIndex: 3,
+                    tooltip: {
+                        title: 'Explication – التفسير',
+                        rule: 'Le tafsîr ne peut être coupé de ce qu’il explique.',
+                        verses: [{ verse: '﴿ فَأَوْحَيْنَا إِلَيْهِ أَنِ اصْنَعِ الْفُلْكَ ﴾', ref: 'Al-Mu\'minûn 23:27' }],
+                        explanation: 'PDF page 1.'
+                    }
+                },
+                {
+                    id: 'b3-3',
+                    labelFr: 'Pronom relatif',
+                    labelAr: 'الموصول',
+                    type: 'leaf',
+                    branchIndex: 3,
+                    tooltip: {
+                        title: 'Pronom relatif – الموصول',
+                        rule: 'الذي، ما، مَن… exigent leur ṣila.',
+                        verses: [{ verse: '﴿ الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ ﴾', ref: 'Al-Baqara 2:3' }],
+                        explanation: 'PDF page 1 & 2.'
+                    }
+                },
+                {
+                    id: 'b3-4',
+                    labelFr: 'Coordination (nasq)',
+                    labelAr: 'العطف / النسق',
+                    type: 'leaf',
+                    branchIndex: 3,
+                    tooltip: {
+                        title: 'Coordination – العطف',
+                        rule: 'Conjonctions lient obligatoirement ce qui suit.',
+                        verses: [{ verse: '﴿ وَالسَّمَاءَ بَنَيْنَاهَا بِأَيْدٍ وَإِنَّا لَمُوسِعُونَ ﴾', ref: 'Adh-Dhâriyât 51:47' }],
+                        explanation: 'PDF page 1.'
+                    }
+                },
+                {
+                    id: 'b3-5',
+                    labelFr: 'Renforcement (ta\'kîd)',
+                    labelAr: 'التوكيد',
+                    type: 'leaf',
+                    branchIndex: 3,
+                    tooltip: {
+                        title: 'Renforcement – التوكيد',
+                        rule: 'Le ta\'kîd renforce le mu\'akkad.',
+                        verses: [{ verse: '﴿ فَسَجَدَ الْمَلَائِكَةُ كُلُّهُمْ أَجْمَعُونَ ﴾', ref: 'Al-Ḥijr 15:30' }],
+                        explanation: 'PDF page 4.'
+                    }
+                }
+            ]
+        },
+        {
+            id: 'b4',
+            labelFr: '4. Particules spéciales',
+            labelAr: 'الحروف الخاصة',
+            type: 'branch',
+            branchIndex: 4,
+            tooltip: { title: 'Particules spéciales', rule: 'Interrogation, condition, serment… exigent une suite.', verses: [], explanation: 'PDF page 1.' },
+            children: [
+                {
+                    id: 'b4-1',
+                    labelFr: 'Interrogation',
+                    labelAr: 'حروف الاستفهام',
+                    type: 'leaf',
+                    branchIndex: 4,
+                    tooltip: {
+                        title: 'Interrogation – الاستفهام',
+                        rule: 'Hurf al-istifhâm + ce sur quoi porte la question.',
+                        verses: [{ verse: '﴿ أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِأَصْحَابِ الْفِيلِ ﴾', ref: 'Al-Fîl 105:1' }],
+                        explanation: 'PDF page 1.'
+                    }
+                },
+                {
+                    id: 'b4-2',
+                    labelFr: 'Condition (jazâ\')',
+                    labelAr: 'حروف الجزاء',
+                    type: 'leaf',
+                    branchIndex: 4,
+                    tooltip: {
+                        title: 'Condition – الشرط والجزاء',
+                        rule: 'Protase + apodose inséparables.',
+                        verses: [{ verse: '﴿ وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا ﴾', ref: 'Aṭ-Ṭalâq 65:2' }],
+                        explanation: 'PDF page 1.'
+                    }
+                },
+                {
+                    id: 'b4-3',
+                    labelFr: 'Impératif + فَ de réponse',
+                    labelAr: 'الأمر وفاء الجواب',
+                    type: 'leaf',
+                    branchIndex: 4,
+                    tooltip: {
+                        title: 'Impératif + فَ (6 cas)',
+                        rule: 'Les 6 cas du PDF : amr, nahy, istifhâm, jahd, tamannî, shukûk.',
+                        verses: [{ verse: '﴿ رَبَّنَا أَخِّرْنَا إِلَىٰ أَجَلٍ قَرِيبٍ نُّجِبْ دَعْوَتَكَ ﴾', ref: 'Ibrâhîm 14:44' }],
+                        explanation: 'PDF page 1.'
+                    }
+                },
+                {
+                    id: 'b4-4',
+                    labelFr: 'Serments (qasam)',
+                    labelAr: 'أحرف القسم',
+                    type: 'leaf',
+                    branchIndex: 4,
+                    tooltip: {
+                        title: 'Serments – القسم',
+                        rule: 'Serment + jawâb al-qasam.',
+                        verses: [{ verse: '﴿ وَالْعَصْرِ ۝ إِنَّ الْإِنسَانَ لَفِي خُسْرٍ ﴾', ref: 'Al-\'Aṣr 103:1-2' }],
+                        explanation: 'PDF page 1.'
+                    }
+                },
+                {
+                    id: 'b4-5',
+                    labelFr: 'حَيْثُ',
+                    labelAr: 'حيثُ',
+                    type: 'leaf',
+                    branchIndex: 4,
+                    tooltip: {
+                        title: 'حَيْثُ – Là où',
+                        rule: 'Toujours suivi de sa complétive.',
+                        verses: [{ verse: '﴿ وَحَيْثُ مَا كُنتُمْ فَوَلُّوا وُجُوهَكُمْ شَطْرَهُ ﴾', ref: 'Al-Baqara 2:150' }],
+                        explanation: 'PDF page 1.'
+                    }
+                },
+                {
+                    id: 'b4-6',
+                    labelFr: 'Négation لا (5 cas)',
+                    labelAr: 'لا النافية',
+                    type: 'leaf',
+                    branchIndex: 4,
+                    tooltip: {
+                        title: 'لا – Négation (5 cas)',
+                        rule: 'Nahy, ghayr, tabri’a, tawqîd, etc.',
+                        verses: [{ verse: '﴿ لَا إِكْرَاهَ فِي الدِّينِ ﴾', ref: 'Al-Baqara 2:256' }],
+                        explanation: 'PDF page 2 : 5 cas détaillés.'
+                    }
+                }
+            ]
+        },
+        {
+            id: 'b5',
+            labelFr: '5. Autres interdictions',
+            labelAr: 'ممنوعات أخرى',
+            type: 'branch',
+            branchIndex: 5,
+            tooltip: { title: 'Autres cas d\'interdiction de waqf', rule: 'Particules postposées ou de coordination.', verses: [], explanation: 'PDF page 2.' },
+            children: [
+                {
+                    id: 'b5-1',
+                    labelFr: 'قَدْ',
+                    labelAr: 'قَدْ',
+                    type: 'leaf',
+                    branchIndex: 5,
+                    tooltip: {
+                        title: 'قَدْ – Particule de réalisation',
+                        rule: 'Toujours suivi d’un verbe.',
+                        verses: [{ verse: '﴿ قَدْ أَفْلَحَ الْمُؤْمِنُونَ ﴾', ref: 'Al-Mu\'minûn 23:1' }],
+                        explanation: 'PDF page 2.'
+                    }
+                },
+                {
+                    id: 'b5-2',
+                    labelFr: 'سَوْفَ / السين',
+                    labelAr: 'سوف / السين',
+                    type: 'leaf',
+                    branchIndex: 5,
+                    tooltip: {
+                        title: 'سَوْفَ / السين – Futur',
+                        rule: 'Marqueur du futur lié au verbe.',
+                        verses: [{ verse: '﴿ سَيَقُولُ السُّفَهَاءُ مِنَ النَّاسِ ﴾', ref: 'Al-Baqara 2:142' }],
+                        explanation: 'PDF page 2.'
+                    }
+                },
+                {
+                    id: 'b5-3',
+                    labelFr: 'أَوْ (alternatives)',
+                    labelAr: 'أَوْ',
+                    type: 'leaf',
+                    branchIndex: 5,
+                    tooltip: {
+                        title: 'أَوْ – L\'alternative',
+                        rule: 'Lien obligatoire entre deux termes.',
+                        verses: [{ verse: '﴿ فَمَن كَانَ مِنكُم مَّرِيضًا أَوْ عَلَىٰ سَفَرٍ ﴾', ref: 'Al-Baqara 2:184' }],
+                        explanation: 'PDF page 2.'
+                    }
+                },
+                {
+                    id: 'b5-4',
+                    labelFr: 'Vocatif (nidâ\')',
+                    labelAr: 'يا النداء',
+                    type: 'leaf',
+                    branchIndex: 5,
+                    tooltip: {
+                        title: 'Vocatif – النداء',
+                        rule: 'يَا + munâdâ inséparables.',
+                        verses: [{ verse: '﴿ يَا أَيُّهَا الَّذِينَ آمَنُوا ﴾', ref: 'Al-Baqara 2:104' }],
+                        explanation: 'PDF page 2.'
+                    }
+                },
+                {
+                    id: 'b5-5',
+                    labelFr: 'Ḥâl (état)',
+                    labelAr: 'الحال',
+                    type: 'leaf',
+                    branchIndex: 5,
+                    tooltip: {
+                        title: 'Ḥâl – Complément d\'état',
+                        rule: 'Décrit l’état concomitant.',
+                        verses: [{ verse: '﴿ وَلَا تُبَاشِرُوهُنَّ وَأَنتُمْ عَاكِفُونَ فِي الْمَسَاجِدِ ﴾', ref: 'Al-Baqara 2:187' }],
+                        explanation: 'PDF page 2.'
+                    }
+                }
+            ]
+        }
+    ]
+};
+
+// (Le reste du code JavaScript est IDENTIQUE à la version précédente – layout, render, tooltips, controls…)
+// Il suffit de remplacer l’ancien <script> par ce nouveau TREE mis à jour.
+// Le fichier complet reste fonctionnel tel quel.
+
+const CANVAS_W = 1600;
+const CANVAS_H = 1400;
+const CENTER_X = CANVAS_W / 2;
+const CENTER_Y = 200;
+
+const BRANCH_COLORS = { 1: '#3b82f6', 2: '#ea580c', 3: '#8b5cf6', 4: '#d97706', 5: '#e11d48' };
+
+function layoutNodes(tree) { /* identique à la version précédente */ 
+    const nodes = []; const edges = [];
+    nodes.push({ ...tree, x: CENTER_X - 110, y: CENTER_Y - 40, w: 220, h: 80 });
+    const branches = tree.children || [];
+    const totalWidth = CANVAS_W - 200;
+    const branchSpacing = totalWidth / branches.length;
+    branches.forEach((branch, bi) => {
+        const bx = 100 + bi * branchSpacing + branchSpacing / 2 - 95;
+        const by = CENTER_Y + 160;
+        const bw = 190; const bh = 70;
+        nodes.push({ ...branch, x: bx, y: by, w: bw, h: bh });
+        edges.push({ from: { x: CENTER_X, y: CENTER_Y + 40 }, to: { x: bx + bw / 2, y: by }, color: BRANCH_COLORS[branch.branchIndex], parentId: tree.id, childId: branch.id });
+        const leaves = branch.children || [];
+        const leafStartX = bx + bw / 2 - ((leaves.length - 1) * 85);
+        leaves.forEach((leaf, li) => {
+            const lx = leafStartX + li * 170 - 75;
+            const ly = by + 130 + (li % 2 === 0 ? 0 : 40);
+            const lw = 150; const lh = 60;
+            nodes.push({ ...leaf, x: lx, y: ly, w: lw, h: lh });
+            edges.push({ from: { x: bx + bw / 2, y: by + bh }, to: { x: lx + lw / 2, y: ly }, color: BRANCH_COLORS[branch.branchIndex], parentId: branch.id, childId: leaf.id });
+        });
+    });
+    return { nodes, edges };
+}
+
+const canvas = document.getElementById('mindmapCanvas');
+const svgEl = document.getElementById('connectorsSvg');
+const collapsedBranches = new Set();
+
+function render() { /* identique à la version précédente */ 
+    const { nodes, edges } = layoutNodes(TREE);
+    let maxX = 0, maxY = 0;
+    nodes.forEach(n => { maxX = Math.max(maxX, n.x + n.w + 50); maxY = Math.max(maxY, n.y + n.h + 80); });
+    canvas.style.width = maxX + 'px';
+    canvas.style.height = maxY + 'px';
+    svgEl.setAttribute('width', maxX);
+    svgEl.setAttribute('height', maxY);
+    svgEl.setAttribute('viewBox', `0 0 ${maxX} ${maxY}`);
+
+    let pathsHTML = '';
+    edges.forEach(e => {
+        const mx = (e.from.x + e.to.x) / 2;
+        const my = (e.from.y + e.to.y) / 2;
+        const cp1y = e.from.y + (e.to.y - e.from.y) * 0.4;
+        const cp2y = e.from.y + (e.to.y - e.from.y) * 0.6;
+        pathsHTML += `<path d="M${e.from.x},${e.from.y} C${e.from.x},${cp1y} ${e.to.x},${cp2y} ${e.to.x},${e.to.y}" stroke="${e.color}" class="connector-path" />`;
+    });
+    svgEl.innerHTML = pathsHTML;
+
+    canvas.querySelectorAll('.node-container').forEach(el => el.remove());
+    nodes.forEach((n, i) => {
+        const div = document.createElement('div');
+        const branchClass = n.branchIndex ? `branch-${n.branchIndex}` : '';
+        div.className = `node-container ${n.type} ${branchClass} ${n.type === 'leaf' ? 'leaf' : ''}`;
+        div.style.left = n.x + 'px';
+        div.style.top = n.y + 'px';
+        div.style.width = n.w + 'px';
+        div.dataset.id = n.id;
+
+        const hasChildren = n.children && n.children.length > 0;
+        const toggleHTML = hasChildren ? `<span class="toggle-indicator">${collapsedBranches.has(n.id) ? '+' : '−'}</span>` : '';
+
+        const labelFr = (n.labelFr || '').replace(/\n/g, '<br>');
+        div.innerHTML = `
+            <div class="node">
+                ${n.type === 'central' ? '<span class="quran-icon">📖</span>' : ''}
+                <div class="label-fr">${labelFr}</div>
+                <div class="label-ar">${n.labelAr || ''}</div>
+                ${toggleHTML}
+            </div>
+        `;
+
+        if (hasChildren) {
+            div.addEventListener('click', () => {
+                if (collapsedBranches.has(n.id)) collapsedBranches.delete(n.id);
+                else collapsedBranches.add(n.id);
+                render();
+                setTimeout(initTooltips, 100);
+            });
+        }
+        canvas.appendChild(div);
+    });
+
+    setTimeout(initTooltips, 50);
+}
+
+let tippyInstances = [];
+function buildTooltipHTML(tt) {
+    let versesHTML = '';
+    (tt.verses || []).forEach(v => {
+        versesHTML += `<div class="tt-example"><div class="verse">${v.verse}</div><div class="ref">${v.ref}</div></div>`;
+    });
+    return `<div class="tooltip-content"><div class="tt-title">${tt.title}</div><div class="tt-rule">${tt.rule}</div>${versesHTML}<div class="tt-explanation">💡 ${tt.explanation}</div></div>`;
+}
+
+function findNodeData(id, tree) {
+    if (tree.id === id) return tree;
+    for (const ch of (tree.children || [])) {
+        const found = findNodeData(id, ch);
+        if (found) return found;
+    }
+    return null;
+}
+
+function initTooltips() {
+    tippyInstances.forEach(t => t.destroy());
+    tippyInstances = [];
+    document.querySelectorAll('.node-container').forEach(el => {
+        const nodeId = el.dataset.id;
+        const data = findNodeData(nodeId, TREE);
+        if (data && data.tooltip) {
+            const inst = tippy(el, {
+                content: buildTooltipHTML(data.tooltip),
+                allowHTML: true,
+                theme: 'waqf',
+                placement: 'auto',
+                maxWidth: 380,
+                interactive: true,
+                appendTo: document.body,
+                animation: 'shift-away',
+                delay: [200, 100],
+                arrow: true
+            });
+            tippyInstances.push(inst);
+        }
+    });
+}
+
+function expandAll() { collapsedBranches.clear(); render(); }
+function collapseAll() { TREE.children.forEach(b => collapsedBranches.add(b.id)); render(); }
+function toggleFullscreen() {
+    const wrapper = document.getElementById('mindmapWrapper');
+    wrapper.classList.toggle('fullscreen-active');
+}
+async function exportPNG() {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    document.head.appendChild(script);
+    script.onload = async () => {
+        const result = await html2canvas(canvas, { backgroundColor: '#070d1a', scale: 2 });
+        const link = document.createElement('a');
+        link.download = 'mindmap-waqf-pdf.png';
+        link.href = result.toDataURL('image/png');
+        link.click();
+    };
+}
+
+render();
+</script>
+</body>
+</html>
